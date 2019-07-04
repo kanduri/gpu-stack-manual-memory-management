@@ -45,8 +45,11 @@ public:
         return buf;
     }
 
-    stack_impl<T>* get_impl()
-    {
+    stack_impl<T>* get_impl() {
         return impl_;
+    }
+
+    size_t size() {
+        return impl_->size;
     }
 };
