@@ -18,7 +18,7 @@ public:
         stack_impl<T> impl;
         impl.capacity = capacity_;
         impl.size = 0;
-        impl.data = gpu_malloc<T>(capacity_);
+        impl.data = capacity_>0u? gpu_malloc<T>(capacity_): nullptr;
         
         // copy the stack_impl to device memory impl_
         impl_ = gpu_malloc<stack_impl<T> >(1);
@@ -29,7 +29,7 @@ public:
         // get a copy of the implementation
         stack_impl<T> impl;
         d2h_mem_copy<stack_impl<T> >(&impl, impl_, sizeof(stack_impl<T>));
-        if (impl.size==0u) {
+        if (impl.size==0u || impl.capacity==0u) {
             return {};
         }
         
@@ -49,7 +49,24 @@ public:
         return impl_;
     }
 
+    stack_impl<T> get_impl_copy() {
+        stack_impl<T> impl;
+        d2h_mem_copy<stack_impl<T> >(&impl, impl_, sizeof(stack_impl<T>));
+
+        return impl;
+    }
+
     size_t size() {
-        return impl_->size;
+        auto impl_copy = get_impl_copy();
+        return std::min(impl_copy.size, impl_copy.capacity);
+    }
+
+    size_t pushes() {
+        auto impl_copy = get_impl_copy();
+        return impl_copy.size;
+    }
+
+    size_t capacity() {
+        return capacity_;
     }
 };
